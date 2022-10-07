@@ -10,17 +10,17 @@ TODO:
 - [ ] Build an ortholog prediction file for mice
 - [ ] Determine whether to make a gene_name_alias_corrections file
 
-- [ ] Figure out how to load model into database
+- [x] Figure out how to load model into database
 - [ ] Build model yml file
 - [ ] Document above
 - [ ] Figure out what experiment_Sample_annotation is and rebuild it
 - [ ] Document above
-- [ ] Build gene_gene_network via correltation between gene's weights in different LVs
-- [ ] Document above
-- [ ] Build gene signature participation (reformat PLIER Z matrix)
-- [ ] Document above
-- [ ] Build sample signature activity (transform training data with PLIER weights)
-- [ ] Document above
+- [x] Build gene_gene_network via correlation between gene's weights in different LVs
+- [x] Document above
+- [x] Build gene signature participation (reformat PLIER Z matrix)
+- [x] Document above
+- [x] Build sample signature activity (transform training data with PLIER weights)
+- [x] Document above
 
 1. **Pseudomonas_aeruginosa_PAO1.gene_info**: PAO1 genes of `Pseudomonas` organism.
 
@@ -51,6 +51,18 @@ is downloaded from:
    This JSON file should be converted to Python pickle format by `deployment/create_pickled_genesets.py`.
    The pickle file is required by the endpoint of
    `/api/v1/tribe_client/return_unpickled_genesets?organism=Pseudomonas+aeruginosa`
+
+5. **mousiplier_gene_signature_participation.tsv**: A mapping between genes and latent variables (referred to in Adage as signatures).
+
+   This TSV is created by running the `process_raw_data` script.
+
+5. **mousiplier_sample_signature_activity.tsv**: A mapping between samples and their corresponding latent variable values
+
+   This TSV is created by using the `process_raw_data` script to transform the training data from mousiplier into the learned latent space.
+
+6. **mousiplier_gene_gene_network_cutoff_0.2.txt**: A list of correlations between genes
+
+   This file is generated in `process_raw_data` by loading the gene signature participation data, calculatinge the pearson correlation between the genes, and removing all correlations with absolute values less than 0.2.
 
 5. **raw/Pseudomonas_aeruginosa_PAO1_107.csv**: Pseudomonas gene annotations file
 
@@ -93,3 +105,13 @@ prints out the updated gene names and aliases.
 
    The output is used as the input of the management command
    `genes/management/commands/update_gene_names_aliases.py`.
+
+9. **raw/filtered_Z.tsv**: A TSV file mapping genes to PLIER latent variables.
+
+   This file is produced by running the mousiplier pipeline
+
+9. **raw/sample_to_lv.pkl**: A TSV file mapping genes to PLIER latent variables.
+
+   This file is an intermediate output produced by running process_raw_data. 
+   It contains the LV-space representation of all the samples in the mousiplier training data, and is included in the place of the full `no_scrna_rpkm.tsv` file,
+   which takes up 40GB.
