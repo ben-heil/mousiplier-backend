@@ -1,6 +1,27 @@
 This directory includes data files that are used to populate the database
 during deployment.
 
+TODO:
+- [ ] Get the mouse gene_info file
+- [ ] Get the mouse gene history file
+- [ ] Run create_updated_genes, see if it needs to be modified to work with mouse data
+- [ ] Figure out what the genesets file is and generate a mouse equivalent
+- [ ] Build a gene annotations file for mice
+- [ ] Build an ortholog prediction file for mice
+- [ ] Determine whether to make a gene_name_alias_corrections file
+
+- [ ] Figure out how to load model into database
+- [ ] Build model yml file
+- [ ] Document above
+- [ ] Figure out what experiment_Sample_annotation is and rebuild it
+- [ ] Document above
+- [ ] Build gene_gene_network via correltation between gene's weights in different LVs
+- [ ] Document above
+- [ ] Build gene signature participation (reformat PLIER Z matrix)
+- [ ] Document above
+- [ ] Build sample signature activity (transform training data with PLIER weights)
+- [ ] Document above
+
 1. **Pseudomonas_aeruginosa_PAO1.gene_info**: PAO1 genes of `Pseudomonas` organism.
 
    This file is decompressed from **raw/Pseudomonas_aeruginosa_PAO1.gene_info.gz**, which
