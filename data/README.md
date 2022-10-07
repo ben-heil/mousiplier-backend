@@ -11,7 +11,7 @@ TODO:
 - [ ] Determine whether to make a gene_name_alias_corrections file
 
 - [x] Figure out how to load model into database
-- [ ] Build model yml file
+- [x] Build model yml file
 - [ ] Document above
 - [ ] Figure out what experiment_Sample_annotation is and rebuild it
 - [ ] Document above
@@ -60,9 +60,12 @@ is downloaded from:
 
    This TSV is created by using the `process_raw_data` script to transform the training data from mousiplier into the learned latent space.
 
-6. **mousiplier_gene_gene_network_cutoff_0.2.txt**: A list of correlations between genes
+5. **mousiplier_gene_gene_network_cutoff_0.2.txt**: A list of correlations between genes
 
    This file is generated in `process_raw_data` by loading the gene signature participation data, calculatinge the pearson correlation between the genes, and removing all correlations with absolute values less than 0.2.
+5. **mousiplier_mousiplier_ml_model.yml**: A model listing information about the mousiplier model
+
+   This file was built by hand based on the similar model files from Adage.
 
 5. **raw/Pseudomonas_aeruginosa_PAO1_107.csv**: Pseudomonas gene annotations file
 

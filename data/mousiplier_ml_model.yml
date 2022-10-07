@@ -1,0 +1,26 @@
+# Simple eADAGE machine learning model
+
+# Required fields
+organism_tax_id: 208964
+title: "Mousiplier"
+
+# Optional field that specifies whether edges in the gene-gene network is
+# directed or not. Default value is False.
+directed_g2g_edge: False
+
+# Optional field that specified the minimum weight of edges that will be
+# included in gene-gene network. Default value is 0.
+g2g_edge_cutoff: 0.2
+
+# Other optional fields that default to empty string.
+description: "Mousiplier model with undirected gene-gene edges (cutoff 0.2)"
+authors: "Shuo, Ben, Casey, and Liz"
+affiliations: "University of Pennsylvania, CU Anschutz"
+funders: "TODO"
+references: "TODO"
+license: Null
+
+# Citation-related fields (optional, default to empty string)
+journal: "TODO"
+year: 2012
+url: "TODO"
