@@ -22,36 +22,37 @@ PARTICIPATION_TYPE="Non-zero genes"
 # Populate database
 cd ${PROJECT_DIR}
 
-date; echo "Creating new organism ..."
-./manage.py create_or_update_organism \
-	    --create_only \
-	    --tax_id=${TAX_ID} \
-	    --scientific_name="Pseudomonas aeruginosa" \
-	    --common_name="Pseudomonas aeruginosa" \
-	    --url_template="http://www.pseudomonas.com/feature/show/?locus_tag=<systematic_name>"
-
-echo $DIVIDER; date; echo "Creating CrossRefDB ..."
-./manage.py create_or_update_xrdb \
-	    --name="PseudoCap" \
-	    --URL="http://www.pseudomonas.com/getAnnotation.do?locusID=_REPL_"
-
-echo $DIVIDER; date; echo "Importing gene_info ..."
-./manage.py import_gene_info \
-	  --filename="${DATA_DIR}/Pseudomonas_aeruginosa_PAO1.gene_info" \
-	  --tax_id=${TAX_ID} \
-	  --put_systematic_in_xrdb="PseudoCap"
-
-echo $DIVIDER; date; echo "Importing gene_history ..."
-./manage.py import_gene_history \
-	    --filename="${DATA_DIR}/gene_history_208964" \
-	    --tax_id=${TAX_ID}
-
-echo $DIVIDER; date; echo "Importing updated genes ..."
-./manage.py import_updated_genes "${DATA_DIR}/updated_genes.tsv"
+## These management commands are not implemented in the repo, so I've commented them out for now
+#date; echo "Creating new organism ..."
+#./manage.py create_or_update_organism \
+#	    --create_only \
+#	    --tax_id=${TAX_ID} \
+#	    --scientific_name="Pseudomonas aeruginosa" \
+#	    --common_name="Pseudomonas aeruginosa" \
+#	    --url_template="http://www.pseudomonas.com/feature/show/?locus_tag=<systematic_name>"
+#
+#echo $DIVIDER; date; echo "Creating CrossRefDB ..."
+#./manage.py create_or_update_xrdb \
+#	    --name="PseudoCap" \
+#	    --URL="http://www.pseudomonas.com/getAnnotation.do?locusID=_REPL_"
+#
+#echo $DIVIDER; date; echo "Importing gene_info ..."
+#./manage.py import_gene_info \
+#	  --filename="${DATA_DIR}/Pseudomonas_aeruginosa_PAO1.gene_info" \
+#	  --tax_id=${TAX_ID} \
+#	  --put_systematic_in_xrdb="PseudoCap"
+#
+#echo $DIVIDER; date; echo "Importing gene_history ..."
+#./manage.py import_gene_history \
+#	    --filename="${DATA_DIR}/gene_history_208964" \
+#	    --tax_id=${TAX_ID}
+#
+#echo $DIVIDER; date; echo "Importing updated genes ..."
+#./manage.py import_updated_genes "${DATA_DIR}/updated_genes.tsv"
 
 echo $DIVIDER; date; echo "Importing experiments and samples ..."
 # The following command took ~4 minutes to import data to an RDS instance:
-./manage.py import_experiments_samples "${DATA_DIR}/experiment_sample_annotation.tsv"
+./manage.py import_experiments_samples "${DATA_DIR}/mousiplier_experiment_sample_annotation.tsv"
 
 echo $DIVIDER; date; echo "Adding samples_info to each experiment ..."
 ./manage.py add_samples_info_to_experiment
@@ -60,23 +61,16 @@ echo $DIVIDER; date; echo "Adding simple machine learning model ..."
 ./manage.py create_or_update_ml_model "${DATA_DIR}/mousiplier_ml_model.yml"
 
 echo $DIVIDER; date; echo "Importing sample-signature activity for simple ML model ..."
-# The following command took ~10 minutes to import sample-signature activity data to a local
-# Postgres database on Linux desktop in Greene Lab (~1.5 hours to an RDS instance), with
-# six warning messages:
-#  * Input file line #973: data_source in column #1 not found in database: JS-1B4.9.07.CEL
-#  * Input file line #974: data_source in column #1 not found in database: JS-A164.9.07.CEL
-#  * Input file line #975: data_source in column #1 not found in the database: JS-A84.9.07.CEL
-#  * Input file line #976: data_source in column #1 not found in database: JS-G164.9.07.CEL
-#  * Input file line #977: data_source in column #1 not found in database: JS-G84.18.07.CEL
-#  * Input file line #978: data_source in column #1 not found in database: JS-T24.9.07.CEL
+# The following command took ~TODO minutes to import sample-signature activity data to a local
+# Postgres database on Linux desktop in Greene Lab (~ TODO hours to an RDS instance)
 ./manage.py import_sample_signature_activity \
-	    --filename="${DATA_DIR}/sample_signature_activity.tsv" \
+	    --filename="${DATA_DIR}/mousiplier_sample_signature_activity.tsv" \
 	    --ml_model="${MODEL}"
 
 
 echo $DIVIDER; date; echo "Importing gene-gene network for simple ML model ..."
 ./manage.py import_gene_network \
-	  --filename="${DATA_DIR}/gene_gene_network_cutoff_0.2.txt" \
+	  --filename="${DATA_DIR}/mousiplier_gene_gene_network_cutoff_0.2.txt" \
 	  --ml_model="${MODEL}"
 
 echo $DIVIDER; date; echo "Creating new participation type ..."
@@ -85,25 +79,27 @@ echo $DIVIDER; date; echo "Creating new participation type ..."
 	    --desc="PLIER uses an L1 penalty to zero out less-relevant genes. The participating genes are ones that have non-zero weights."
 
 echo $DIVIDER; date; echo "Importing gene-signature participation data for simple ML model ..."
-# The following command took ~2 minutes to import gene-signature participation data to a local
-# Postgres database on Linux desktop in Greene Lab (~25 minutes to an RDS instance).
+# The following command took ~TODO minutes to import gene-signature participation data to a local
+# Postgres database on Linux desktop in Greene Lab (~TODO minutes to an RDS instance).
 ./manage.py import_gene_signature_participation \
-	    --filename="${DATA_DIR}/gene_signature_participation.tsv" \
+	    --filename="${DATA_DIR}/mousiplier_gene_signature_participation.tsv" \
 	    --ml_model="${MODEL}" \
 	    --participation_type="${PARTICIPATION_TYPE}"
 
-echo $DIVIDER; date; echo "Importing gene-sample expression data ..."
-# The following command took ~6 minutes to import gene-sample expression data to a local
-# Postgres database on Linux in Greene Lab (~8 minutes to an RDS instance), with six
-# warning messages:
-#   * line #1: data_source in column #973 not found in database: JS-1B4.9.07.CEL
-#   * line #1: data_source in column #974 not found in database: JS-A164.9.07.CEL
-#   * line #1: data_source in column #975 not found in database: JS-A84.9.07.CEL
-#   * line #1: data_source in column #976 not found in database: JS-G164.9.07.CEL
-#   * line #1: data_source in column #977 not found in database: JS-G84.18.07.CEL
-#   * line #1: data_source in column #978 not found in database: JS-T24.9.07.CEL
-./manage.py import_gene_sample_expression \
-	    --filename="${DATA_DIR}/gene_sample_expression.tsv" \
-	    --tax_id=${TAX_ID}
+## Omitting this command to see what breaks; the expression data here is 40GB so we probably
+## don't want to have to store it unless its critical
+#echo $DIVIDER; date; echo "Importing gene-sample expression data ..."
+## The following command took ~6 minutes to import gene-sample expression data to a local
+## Postgres database on Linux in Greene Lab (~8 minutes to an RDS instance), with six
+## warning messages:
+##   * line #1: data_source in column #973 not found in database: JS-1B4.9.07.CEL
+##   * line #1: data_source in column #974 not found in database: JS-A164.9.07.CEL
+##   * line #1: data_source in column #975 not found in database: JS-A84.9.07.CEL
+##   * line #1: data_source in column #976 not found in database: JS-G164.9.07.CEL
+##   * line #1: data_source in column #977 not found in database: JS-G84.18.07.CEL
+##   * line #1: data_source in column #978 not found in database: JS-T24.9.07.CEL
+#./manage.py import_gene_sample_expression \
+#	    --filename="${DATA_DIR}/gene_sample_expression.tsv" \
+#	    --tax_id=${TAX_ID}
 
 echo $DIVIDER; echo "Database populated successfully!"; date
