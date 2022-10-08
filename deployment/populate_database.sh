@@ -57,10 +57,7 @@ echo $DIVIDER; date; echo "Adding samples_info to each experiment ..."
 ./manage.py add_samples_info_to_experiment
 
 echo $DIVIDER; date; echo "Adding simple machine learning model ..."
-./manage.py create_or_update_ml_model "${DATA_DIR}/simple_ml_model.yml"
-
-echo $DIVIDER; date; echo "Adding complex machine learning model ..."
-./manage.py create_or_update_ml_model "${DATA_DIR}/complex_ml_model.yml"
+./manage.py create_or_update_ml_model "${DATA_DIR}/mousiplier_ml_model.yml"
 
 echo $DIVIDER; date; echo "Importing sample-signature activity for simple ML model ..."
 # The following command took ~10 minutes to import sample-signature activity data to a local
@@ -74,33 +71,13 @@ echo $DIVIDER; date; echo "Importing sample-signature activity for simple ML mod
 #  * Input file line #978: data_source in column #1 not found in database: JS-T24.9.07.CEL
 ./manage.py import_sample_signature_activity \
 	    --filename="${DATA_DIR}/sample_signature_activity.tsv" \
-	    --ml_model="${SIMPLE_MODEL}"
+	    --ml_model="${MODEL}"
 
-echo $DIVIDER; date; echo "Importing sample-signature activity for complex ML model ..."
-# The following command took ~10 minutes to import sample-signature activity data to a local
-# Postgres database on Linux desktop in Greene Lab (~1.5 hours to an RDS instance), with
-# six warning messages:
-#  * Input file line #973: data_source in column #1 not found in database: JS-1B4.9.07.CEL
-#  * Input file line #974: data_source in column #1 not found in database: JS-A164.9.07.CEL
-#  * Input file line #975: data_source in column #1 not found in the database: JS-A84.9.07.CEL
-#  * Input file line #976: data_source in column #1 not found in database: JS-G164.9.07.CEL
-#  * Input file line #977: data_source in column #1 not found in database: JS-G84.18.07.CEL
-#  * Input file line #978: data_source in column #1 not found in database: JS-T24.9.07.CEL
-./manage.py import_sample_signature_activity \
-	  --filename="${DATA_DIR}/sample_signature_activity.tsv" \
-	  --ml_model="${COMPLEX_MODEL}"
 
 echo $DIVIDER; date; echo "Importing gene-gene network for simple ML model ..."
 ./manage.py import_gene_network \
 	  --filename="${DATA_DIR}/gene_gene_network_cutoff_0.2.txt" \
-	  --ml_model="${SIMPLE_MODEL}"
-
-echo $DIVIDER; date; echo "Importing gene-gene network for complex ML model ..."
-# The following command took ~3.5 minutes to import gene-gene network data to a local
-# Postgres database on Linux desktop in Greene Lab (~5 minutes to an RDS instance).
-./manage.py import_gene_network \
-	  --filename="${DATA_DIR}/gene_gene_network_cutoff_0.2.txt" \
-	  --ml_model="${COMPLEX_MODEL}"
+	  --ml_model="${MODEL}"
 
 echo $DIVIDER; date; echo "Creating new participation type ..."
 ./manage.py create_or_update_participation_type \
@@ -112,17 +89,8 @@ echo $DIVIDER; date; echo "Importing gene-signature participation data for simpl
 # Postgres database on Linux desktop in Greene Lab (~25 minutes to an RDS instance).
 ./manage.py import_gene_signature_participation \
 	    --filename="${DATA_DIR}/gene_signature_participation.tsv" \
-	    --ml_model="${SIMPLE_MODEL}" \
+	    --ml_model="${MODEL}" \
 	    --participation_type="${PARTICIPATION_TYPE}"
-
-echo $DIVIDER; date; echo "Importing gene-signature participation data for complex ML model ..."
-# The following command took ~2 minutes to import gene-signature participation data to a local
-# Postgres database on Linux desktop in Greene Lab (~25 minutes to an RDS instance).
-./manage.py import_gene_signature_participation \
-	    --filename="${DATA_DIR}/gene_signature_participation.tsv" \
-	    --ml_model="${COMPLEX_MODEL}" \
-	    --participation_type="${PARTICIPATION_TYPE}"
-
 
 echo $DIVIDER; date; echo "Importing gene-sample expression data ..."
 # The following command took ~6 minutes to import gene-sample expression data to a local
