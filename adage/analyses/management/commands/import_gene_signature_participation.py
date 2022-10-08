@@ -26,7 +26,6 @@ IMPORTANT: Before running this command, please make sure that:
 """
 
 import logging
-import statistics
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from genes.models import Gene
@@ -87,13 +86,13 @@ def create_or_update_participation(file_handle, ml_model, participation_type):
             f"Participation type not found in database: {participation_type}"
         )
 
-    # Read file_handle and collect heavy genes
+    # Read file_handle and collect nonzero genes
     weight_matrix = get_weight_matrix(file_handle)
-    heavy_genes = find_heavy_genes(weight_matrix)
+    nonzero_genes = find_nonzero_genes(weight_matrix)
 
     # Enclose reading/importing process in a transaction.
     with transaction.atomic():
-        update_db(ml_model, participation_type, heavy_genes)
+        update_db(ml_model, participation_type, nonzero_genes)
 
 
 def get_weight_matrix(file_handle):
@@ -127,43 +126,34 @@ def get_weight_matrix(file_handle):
     return weight_matrix
 
 
-def find_heavy_genes(weight_matrix):
+def find_nonzero_genes(weight_matrix):
     """
-    Return the heavy genes based on input weight_matrix. The return value
+    Return the nonzero genes based on input weight_matrix. The return value
     is a dict, in which each key is a positive or nagative sigature name,
-    and each value is a nested dict, whose keys are heavy genes' systematic
+    and each value is a nested dict, whose keys are nonzero genes' systematic
     names, and values are corresponding weights.
     """
 
-    heavy_genes = dict()
+    nonzero_genes = dict()
     for node_name, genes_weights in weight_matrix.items():
-        weights = genes_weights.values()
-
-        mean = statistics.mean(weights)
-        std_dev = statistics.stdev(weights)
-
-        pos_sig_name = node_name + "pos"
-        neg_sig_name = node_name + "neg"
-
-        heavy_genes[pos_sig_name] = dict()
-        heavy_genes[neg_sig_name] = dict()
+        nonzero_genes[node_name] = dict()
 
         for g, w in genes_weights.items():
-            if w > mean + 2.5 * std_dev:
-                heavy_genes[pos_sig_name][g] = w
-            elif w < mean - 2.5 * std_dev:
-                heavy_genes[neg_sig_name][g] = w
+            # Ignore genes whose weights are zero (don't do exact check because
+            # floats
+            if w > 1e-9 or w < 1e-9:
+                nonzero_genes[node_name][g] = w
 
-    return heavy_genes
+    return nonzero_genes
 
 
-def update_db(ml_model, participation_type, heavy_genes):
+def update_db(ml_model, participation_type, nonzero_genes):
     """
-    Update database based on heavy_genes.  An exception will be raised
+    Update database based on nonzero_genes.  An exception will be raised
     if any error is detected.
     """
 
-    for sig_name, genes_weights in heavy_genes.items():
+    for sig_name, genes_weights in nonzero_genes.items():
         try:
             signature = Signature.objects.get(name=sig_name, mlmodel=ml_model)
         except Signature.DoesNotExist:
