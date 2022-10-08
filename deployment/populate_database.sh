@@ -52,7 +52,7 @@ cd ${PROJECT_DIR}
 
 echo $DIVIDER; date; echo "Importing experiments and samples ..."
 # The following command took ~4 minutes to import data to an RDS instance:
-./manage.py import_experiments_samples "${DATA_DIR}/mousiplier_experiment_sample_annotation.tsv"
+./manage.py import_experiments_samples "${DATA_DIR}/recount_metadata.tsv.gz"
 
 echo $DIVIDER; date; echo "Adding samples_info to each experiment ..."
 ./manage.py add_samples_info_to_experiment
