@@ -5,25 +5,11 @@ backend database.
 """
 
 import logging
-import os
-import sys
+import pandas as pd
 from operator import itemgetter
-from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from analyses.models import Experiment, Sample, SampleAnnotation, AnnotationType
-
-# Import ADAGE utilities.
-# FIXME: `get_pseudo_sdrf.py` and `gen_spreadsheets.py` modules are copied from
-#        https://bitbucket.org/greenelab/get_pseudomonas and ported to Python 3.
-#        We need to either move the code we need from `get_pseudo_sdrf` and
-#        `gen_spreadsheets` modules into current repo, or make the code we need
-#        into a pip-installable utility package that will be imported by any
-#        project that needs it.
-repo_dir = os.path.dirname(settings.BASE_DIR)
-sys.path.append(os.path.abspath(repo_dir))
-import get_pseudo_sdrf as gp
-import gen_spreadsheets as gs
 
 JSON_CACHE_FILE_NAME = 'json_cache.p'
 
@@ -51,7 +37,7 @@ class Command(BaseCommand):
             )
 
 
-def import_data(annotation_fh, dir_name=None):
+def import_data(metadata_path, dir_name=None):
     """
     Import experiments, samples, and annotations data to initialize the backend
     database. We assume that we are starting with an empty database, so this
@@ -73,52 +59,76 @@ def import_data(annotation_fh, dir_name=None):
     This function will raise errors if it is unable to complete successfully,
     and it will exit with no error if it succeeds in initializing the database.
     """
-    if not dir_name: dir_name = os.getcwd()
-    if not os.path.isdir(dir_name):
-        os.mkdir(dir_name)
-    ss = gs.Spreadsheet()
-    ss.parse_txt_file(annotation_fh)
+    ## We're loading our experiments info from a metadata file so we don't
+    ## need to query arrayexpress
+    #if not dir_name: dir_name = os.getcwd()
+    #if not os.path.isdir(dir_name):
+    #    os.mkdir(dir_name)
+    #ss = gs.Spreadsheet()
+    #ss.parse_txt_file(annotation_fh)
 
-    # download all experiment attributes from ArrayExpress and create an
-    # Experiment in the database for each matching experiment found in the
-    # annotation spreadsheet. Raise an error if any annotated experiment
-    # cannot be found in the data retrieved from ArrayExpress.
-    ae_retriever = gp.AERetriever(
-        ae_url=gp._AEURL_EXPERIMENTS,
-        cache_file_name=os.path.join(dir_name, JSON_CACHE_FILE_NAME)
-    )
-    ae_experiments = ae_retriever.ae_json_to_experiment_text()
-    annotated_experiments = ss.get_experiment_ids()
-    # we can fail fast by checking for missing experiments before we start
-    missing_experiments = (
-        frozenset(annotated_experiments) -
-        frozenset([e['accession'] for e in ae_experiments])
-    )
-    if missing_experiments:
-        msg= "The following annotated experiments are missing from ArrayExpress: "
-        raise RuntimeError(msg + "[{:s}]".format(', '.join(missing_experiments)))
+    ## download all experiment attributes from ArrayExpress and create an
+    ## Experiment in the database for each matching experiment found in the
+    ## annotation spreadsheet. Raise an error if any annotated experiment
+    ## cannot be found in the data retrieved from ArrayExpress.
+    #ae_retriever = gp.AERetriever(
+    #    ae_url=gp._AEURL_EXPERIMENTS,
+    #    cache_file_name=os.path.join(dir_name, JSON_CACHE_FILE_NAME)
+    #)
+    #ae_experiments = ae_retriever.ae_json_to_experiment_text()
+    #annotated_experiments = ss.get_experiment_ids()
+    ## we can fail fast by checking for missing experiments before we start
+    #missing_experiments = (
+    #    frozenset(annotated_experiments) -
+    #    frozenset([e['accession'] for e in ae_experiments])
+    #)
+    #if missing_experiments:
+    #    msg= "The following annotated experiments are missing from ArrayExpress: "
+    #    raise RuntimeError(msg + "[{:s}]".format(', '.join(missing_experiments)))
 
     # nothing missing, so proceed with importing!
-    for e in ae_experiments:
-        if e['accession'] in annotated_experiments:
-            Experiment.objects.create(**e)
+    recount_metadata = pd.read_csv(metadata_path, sep='\t')
+    experiment_info = recount_metadata[['study', 'sra.study_title', 'sra.study_abstract']]
+    experiment_info = experiment_info.drop_duplicates()
+
+    # Build a dataframe with one experiment per line by calling groupby on the
+    # metadata and returning only exp-specific fields
+
+    for _, row in experiment_info.iterrows():
+        # Experiment create expects an accession, a name, a description,
+        # and sample info
+        row_info = {}
+        row_info['accession'] = row['study']
+        row_info['name'] = row['sra.study_title']
+        row_info['description'] = row['sra.study_abstract']
+
+        # There's a samples_info field in experiment objects, but I'm not sure
+        # what it is or if it's used for anything. I'll leave it out for now
+        # row_info['samples_info'] = pass
+
+        Experiment.objects.create(**row_info)
 
     # now that we have database records for every Experiment, we walk through
-    # the annotation spreadsheet and create records for Samples, linking each
+    # the metadata dataframe and create records for Samples, linking each
     # to one or more Experiment(s) and creating a set of SampleAnnotations for
     # each as we go.
     mismatches = {}  # mismatches indexed by sample and experiment ids
-    for r in ss.rows():
-        row_experiment = Experiment.objects.get(accession=r.accession)
-        ml_data_source = r.cel_file
+    for _, r in recount_metadata.iterrows():
+        row_experiment = Experiment.objects.get(accession=r['study'])
+
+        # This may break something since adage listed all the CEL files each
+        # experiment came from. However, all our data comes from the Recount3
+        # compendium
+        ml_data_source = 'Recount3'
         if ml_data_source == '':
             ml_data_source = None
         row_sample, created = Sample.objects.get_or_create(
-                name=r.sample, ml_data_source=ml_data_source)
+                name=r['external_id'], ml_data_source=ml_data_source)
         row_experiment.sample_set.add(row_sample)
         annotations = dict(
-            (k, v) for k, v in r._asdict().items() if k not in (
-                'accession', 'sample', 'cel_file', 'expt_summary'
+            (k, v) for k, v in r._asdict().items() if k in (
+                'sra.sample_description', 'sra.design_description',
+                'sra.sample_attributes', 'sra.sample_name'
             )
         )
         if created:
@@ -145,8 +155,8 @@ def import_data(annotation_fh, dir_name=None):
                         k_type, _ = AnnotationType.objects.get_or_create(
                                 typename=k)
                         existing_annotation, _ = \
-                                SampleAnnotation.objects.get_or_create(
-                                    annotation_type=k_type, sample=row_sample)
+                            SampleAnnotation.objects.get_or_create(
+                                annotation_type=k_type, sample=row_sample)
                         existing_annotation.text = v
                         existing_annotation.save()
                         continue
@@ -191,21 +201,12 @@ def import_data(annotation_fh, dir_name=None):
         warning_detail = []
         for key in sorted_err_keys:
             v = mismatches[key]
-            # modify first element in ss.get_sample_row() to use gs._summary_url
-            experiment_link = '=HYPERLINK("{url}", "{acc}")'.format(
-                    url=(gs._summary_url % "{acc}"), acc="{acc}")
-            e1 = list(ss.get_sample_row(key[1], key[0]))
-            e1[0] = experiment_link.format(acc=e1[0])
-            e2 = list(ss.get_sample_row(key[2], key[0]))
-            e2[0] = experiment_link.format(acc=e2[0])
             warning_detail.append(
                 ("Sample '{key[0]}' in experiment {key[1]} does not match"
-                " experiment {key[2]}. (Check fields: {check})"
-                "\n\t{e1}\n\t{e2}").format(
+                 " experiment {key[2]}. (Check fields: {check})"
+                 ).format(
                     key=key, check=', '.join(v),
-                    e1='\t'.join(e1),
-                    e2='\t'.join(e2),
-                )
+                   )
             )
         logging.warn(
             "Annotation mismatches found:\n{}".format(
