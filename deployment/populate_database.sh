@@ -15,10 +15,9 @@ DATA_DIR="${REPO_DIR}/data"
 DIVIDER="-------------------------------------------------"
 
 # Constants used in management commands
-TAX_ID=208964
-SIMPLE_MODEL="Ensemble ADAGE 300"
-COMPLEX_MODEL="Ensemble ADAGE 300 with more complex gene-gene network"
-PARTICIPATION_TYPE="High-weight genes"
+TAX_ID=10090
+MODEL="Mousiplier"
+PARTICIPATION_TYPE="Non-zero genes"
 
 # Populate database
 cd ${PROJECT_DIR}
@@ -106,7 +105,7 @@ echo $DIVIDER; date; echo "Importing gene-gene network for complex ML model ..."
 echo $DIVIDER; date; echo "Creating new participation type ..."
 ./manage.py create_or_update_participation_type \
 	    --name="${PARTICIPATION_TYPE}" \
-	    --desc="High-weight genes are those that most strongly influence the signature's activity, and we have found that they often reveal the underlying process or processes captured by the signature."
+	    --desc="PLIER uses an L1 penalty to zero out less-relevant genes. The participating genes are ones that have non-zero weights."
 
 echo $DIVIDER; date; echo "Importing gene-signature participation data for simple ML model ..."
 # The following command took ~2 minutes to import gene-signature participation data to a local
