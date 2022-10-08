@@ -2,39 +2,37 @@ This directory includes data files that are used to populate the database
 during deployment.
 
 TODO:
-- [ ] Get the mouse gene_info file
-- [ ] Get the mouse gene history file
-- [ ] Run create_updated_genes, see if it needs to be modified to work with mouse data
-- [ ] Figure out what the genesets file is and generate a mouse equivalent
-- [ ] Build a gene annotations file for mice
-- [ ] Build an ortholog prediction file for mice
-- [ ] Determine whether to make a gene_name_alias_corrections file
-
+- [x] Get the mouse gene_info file
+- [x] Get the mouse gene history file
+- [x] Download a gene annotations file for mice
+- [x] Update create_updated_genes to be compatible with above_gene_annotations.tsv
 - [x] Figure out how to load model into database
 - [x] Build model yml file
-- [ ] Document above
-- [ ] Figure out what experiment_Sample_annotation is and rebuild it
-- [ ] Document above
+- [x] Document above
+- [x] Figure out what experiment_Sample_annotation is and rebuild it (Seems to be generated from a variety of metadata; maybe we can sidestep the generation process and just use the metadata from mousiplier?)
+- [x] Document above
 - [x] Build gene_gene_network via correlation between gene's weights in different LVs
 - [x] Document above
 - [x] Build gene signature participation (reformat PLIER Z matrix)
 - [x] Document above
 - [x] Build sample signature activity (transform training data with PLIER weights)
 - [x] Document above
+- [x] Update populate_database.sh
+- [ ] Test database population
+- [ ] Update datafiles and README to remove adage-specific info
 
-1. **Pseudomonas_aeruginosa_PAO1.gene_info**: PAO1 genes of `Pseudomonas` organism.
+1. **Mus_musculus.gene_info**: Mouse gene information
 
-   This file is decompressed from **raw/Pseudomonas_aeruginosa_PAO1.gene_info.gz**, which
-is downloaded from:
-`ftp://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Archaea_Bacteria/Pseudomonas_aeruginosa_PAO1.gene_info.gz`
+   This file is decompressed from **raw/Mus_musculus.gene_info.gz**, which is downloaded from:
+   `ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Mus_musculus.gene_info.gz`
 
-2. **gene_history_208964**: gene history file of organism whose taxonomy ID is 208964.
+2. **gene_history_10090**: gene history file of Mus musculus
 
    This file is generated based on the following procedure:
    ```shell
-   wget ftp://ftp.ncbi.nih.gov/gene/DATA/gene_history.gz
-   gunzip -k gene_history.gz
-   (head -1 gene_history; grep "^208964\t" gene_history) > gene_history_208964
+   wget ftp://ftp.ncbi.nih.gov/gene/DATA/gene_history.gz                                                                                                                                                    
+   gunzip -k gene_history.gz                                                                                                                                                                                
+   (head -1 gene_history; grep  $'^10090\t' gene_history) > gene_history_10090
    ```
    The original downloaded file **gene_history.gz** is saved in **raw** subdirectory as
    a referenece.
@@ -66,6 +64,9 @@ is downloaded from:
 5. **mousiplier_mousiplier_ml_model.yml**: A model listing information about the mousiplier model
 
    This file was built by hand based on the similar model files from Adage.
+5. **recount_metadata.tsv.gz**: A TSV containing sample and experiment metadata
+
+   This file is downloaded from Recount3 as part of the mousiplier pipeline, then GZipped and stored here
 
 5. **raw/Pseudomonas_aeruginosa_PAO1_107.csv**: Pseudomonas gene annotations file
 
@@ -109,12 +110,17 @@ prints out the updated gene names and aliases.
    The output is used as the input of the management command
    `genes/management/commands/update_gene_names_aliases.py`.
 
-9. **raw/filtered_Z.tsv**: A TSV file mapping genes to PLIER latent variables.
+9. **raw/filtered_Z.tsv**: A TSV file mapping genes to PLIER latent variables
 
    This file is produced by running the mousiplier pipeline
 
-9. **raw/sample_to_lv.pkl**: A TSV file mapping genes to PLIER latent variables.
+9. **raw/sample_to_lv.pkl**: A TSV file mapping genes to PLIER latent variables
 
    This file is an intermediate output produced by running process_raw_data. 
    It contains the LV-space representation of all the samples in the mousiplier training data, and is included in the place of the full `no_scrna_rpkm.tsv` file,
    which takes up 40GB.
+
+9. **raw/mouse_gene_annotations.tsv**: A tsv file containing information about mouse genes' synonyms
+
+   This file was downloaded from http://www.informatics.jax.org/downloads/reports/MRK_List1.rpt
+
