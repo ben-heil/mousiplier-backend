@@ -37,7 +37,7 @@ class Command(BaseCommand):
             )
 
 
-def import_data(metadata_path, dir_name=None):
+def import_data(annotation_fh, dir_name=None):
     """
     Import experiments, samples, and annotations data to initialize the backend
     database. We assume that we are starting with an empty database, so this
@@ -45,9 +45,7 @@ def import_data(metadata_path, dir_name=None):
     imported.
 
     `annotation_fh`: a file handle open to the beginning of a UTF-8 plain text
-    format of the annotated spreadsheet data (including a .CEL file column).
-    File format is expected to match what is exported by
-    gen_spreadsheets.gen_spreadsheets().
+    format of the annotated spreadsheet data.
 
     `dir_name`: a directory for storing .sdrf.txt files to be downloaded by
     get_pseudo_sdrf.download_sdrf_to_dir(). If no `dir_name` is supplied, the
@@ -87,7 +85,7 @@ def import_data(metadata_path, dir_name=None):
     #    raise RuntimeError(msg + "[{:s}]".format(', '.join(missing_experiments)))
 
     # nothing missing, so proceed with importing!
-    recount_metadata = pd.read_csv(metadata_path, sep='\t')
+    recount_metadata = pd.read_csv(annotation_fh, sep='\t')
     experiment_info = recount_metadata[['study', 'sra.study_title', 'sra.study_abstract']]
     experiment_info = experiment_info.drop_duplicates()
 
@@ -119,14 +117,14 @@ def import_data(metadata_path, dir_name=None):
         # This may break something since adage listed all the CEL files each
         # experiment came from. However, all our data comes from the Recount3
         # compendium
-        ml_data_source = 'Recount3'
+        ml_data_source = None
         if ml_data_source == '':
             ml_data_source = None
         row_sample, created = Sample.objects.get_or_create(
                 name=r['external_id'], ml_data_source=ml_data_source)
         row_experiment.sample_set.add(row_sample)
         annotations = dict(
-            (k, v) for k, v in r._asdict().items() if k in (
+            (k, v) for k, v in r.to_dict().items() if k in (
                 'sra.sample_description', 'sra.design_description',
                 'sra.sample_attributes', 'sra.sample_name'
             )
