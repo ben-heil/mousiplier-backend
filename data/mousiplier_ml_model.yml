@@ -1,7 +1,7 @@
 # Simple eADAGE machine learning model
 
 # Required fields
-organism_tax_id: 208964
+organism_tax_id: 10090
 title: "Mousiplier"
 
 # Optional field that specifies whether edges in the gene-gene network is
