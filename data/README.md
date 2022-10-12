@@ -19,7 +19,9 @@ TODO:
 - [x] Document above
 - [x] Update populate_database.sh
 - [ ] Test database population
+- [ ] Figure out what crossref database does
 - [ ] Update datafiles and README to remove adage-specific info
+
 
 1. **Mus_musculus.gene_info**: Mouse gene information
 
