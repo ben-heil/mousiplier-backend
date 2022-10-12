@@ -22,37 +22,37 @@ PARTICIPATION_TYPE="Non-zero genes"
 # Populate database
 cd ${PROJECT_DIR}
 
-## These management commands are not implemented in the repo, so I've commented them out for now
-#date; echo "Creating new organism ..."
-#./manage.py create_or_update_organism \
-#	    --create_only \
-#	    --tax_id=${TAX_ID} \
-#	    --scientific_name="Pseudomonas aeruginosa" \
-#	    --common_name="Pseudomonas aeruginosa" \
-#	    --url_template="http://www.pseudomonas.com/feature/show/?locus_tag=<systematic_name>"
-#
+date; echo "Creating new organism ..."
+./manage.py create_or_update_organism \
+	    --tax_id=${TAX_ID} \
+	    --scientific_name="Mus musculus" \
+	    --common_name="Mouse" \
+
+
+## TODO can update this with an actual pointer to Entrez, MGI, and Alliance Genome, but I'm not really sure 
+## What they do here or what format their URL is suppoed to be
 #echo $DIVIDER; date; echo "Creating CrossRefDB ..."
 #./manage.py create_or_update_xrdb \
-#	    --name="PseudoCap" \
+#	    --name="Ensembl" \
 #	    --URL="http://www.pseudomonas.com/getAnnotation.do?locusID=_REPL_"
 #
-#echo $DIVIDER; date; echo "Importing gene_info ..."
-#./manage.py import_gene_info \
-#	  --filename="${DATA_DIR}/Pseudomonas_aeruginosa_PAO1.gene_info" \
-#	  --tax_id=${TAX_ID} \
-#	  --put_systematic_in_xrdb="PseudoCap"
-#
-#echo $DIVIDER; date; echo "Importing gene_history ..."
-#./manage.py import_gene_history \
-#	    --filename="${DATA_DIR}/gene_history_208964" \
-#	    --tax_id=${TAX_ID}
-#
+echo $DIVIDER; date; echo "Importing gene_info ..."
+./manage.py import_gene_info \
+	  --filename="${DATA_DIR}/Mus_musculus.gene_info" \
+	  --tax_id=${TAX_ID} \
+
+echo $DIVIDER; date; echo "Importing gene_history ..."
+./manage.py import_gene_history \
+	    --filename="${DATA_DIR}/gene_history_10090" \
+	    --tax_id=${TAX_ID}
+
 #echo $DIVIDER; date; echo "Importing updated genes ..."
 #./manage.py import_updated_genes "${DATA_DIR}/updated_genes.tsv"
 
 echo $DIVIDER; date; echo "Importing experiments and samples ..."
 # The following command took ~4 minutes to import data to an RDS instance:
-./manage.py import_experiments_samples "${DATA_DIR}/recount_metadata.tsv.gz"
+# TODO uncomment later; commenting to test other scripts
+./manage.py import_experiments_samples "${DATA_DIR}/recount_metadata.tsv"
 
 echo $DIVIDER; date; echo "Adding samples_info to each experiment ..."
 ./manage.py add_samples_info_to_experiment
@@ -67,7 +67,6 @@ echo $DIVIDER; date; echo "Importing sample-signature activity for simple ML mod
 	    --filename="${DATA_DIR}/mousiplier_sample_signature_activity.tsv" \
 	    --ml_model="${MODEL}"
 
-
 echo $DIVIDER; date; echo "Importing gene-gene network for simple ML model ..."
 ./manage.py import_gene_network \
 	  --filename="${DATA_DIR}/mousiplier_gene_gene_network_cutoff_0.2.txt" \
@@ -79,10 +78,10 @@ echo $DIVIDER; date; echo "Creating new participation type ..."
 	    --desc="PLIER uses an L1 penalty to zero out less-relevant genes. The participating genes are ones that have non-zero weights."
 
 echo $DIVIDER; date; echo "Importing gene-signature participation data for simple ML model ..."
-# The following command took ~TODO minutes to import gene-signature participation data to a local
-# Postgres database on Linux desktop in Greene Lab (~TODO minutes to an RDS instance).
+ The following command took ~TODO minutes to import gene-signature participation data to a local
+ Postgres database on Linux desktop in Greene Lab (~TODO minutes to an RDS instance).
 ./manage.py import_gene_signature_participation \
-	    --filename="${DATA_DIR}/mousiplier_gene_signature_participation.tsv" \
+	    --filename="${DATA_DIR}/mousiplier_gene_signature_participations.tsv" \
 	    --ml_model="${MODEL}" \
 	    --participation_type="${PARTICIPATION_TYPE}"
 
