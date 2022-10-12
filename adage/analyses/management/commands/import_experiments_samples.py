@@ -117,7 +117,7 @@ def import_data(annotation_fh, dir_name=None):
         # This may break something since adage listed all the CEL files each
         # experiment came from. However, all our data comes from the Recount3
         # compendium
-        ml_data_source = None
+        ml_data_source = r['external_id']
         if ml_data_source == '':
             ml_data_source = None
         row_sample, created = Sample.objects.get_or_create(
