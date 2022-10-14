@@ -78,8 +78,8 @@ echo $DIVIDER; date; echo "Creating new participation type ..."
 	    --desc="PLIER uses an L1 penalty to zero out less-relevant genes. The participating genes are ones that have non-zero weights."
 
 echo $DIVIDER; date; echo "Importing gene-signature participation data for simple ML model ..."
- The following command took ~TODO minutes to import gene-signature participation data to a local
- Postgres database on Linux desktop in Greene Lab (~TODO minutes to an RDS instance).
+# The following command took ~TODO minutes to import gene-signature participation data to a local
+# Postgres database on Linux desktop in Greene Lab (~TODO minutes to an RDS instance).
 ./manage.py import_gene_signature_participation \
 	    --filename="${DATA_DIR}/mousiplier_gene_signature_participations.tsv" \
 	    --ml_model="${MODEL}" \
