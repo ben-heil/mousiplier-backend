@@ -38,7 +38,7 @@ date; echo "Creating new organism ..."
 #
 echo $DIVIDER; date; echo "Importing gene_info ..."
 ./manage.py import_gene_info \
-	  --filename="${DATA_DIR}/Mus_musculus.gene_info" \
+	  --filename="${DATA_DIR}/filtered_Mus_musculus.gene_info" \
 	  --tax_id=${TAX_ID} \
 
 echo $DIVIDER; date; echo "Importing gene_history ..."
