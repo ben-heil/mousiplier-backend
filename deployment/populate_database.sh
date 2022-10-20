@@ -43,7 +43,7 @@ echo $DIVIDER; date; echo "Importing gene_info ..."
 
 echo $DIVIDER; date; echo "Importing gene_history ..."
 ./manage.py import_gene_history \
-	    --filename="${DATA_DIR}/gene_history_10090" \
+	    --filename="${DATA_DIR}/filtered_history_10090" \
 	    --tax_id=${TAX_ID}
 
 #echo $DIVIDER; date; echo "Importing updated genes ..."
