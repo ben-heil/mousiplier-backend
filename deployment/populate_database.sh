@@ -29,7 +29,7 @@ date; echo "Creating new organism ..."
 	    --common_name="Mouse" \
 
 
-## TODO can update this with an actual pointer to Entrez, MGI, and Alliance Genome, but I'm not really sure 
+## TODO can update this with an actual pointer to Entrez, MGI, and Alliance Genome, but I'm not really sure
 ## What they do here or what format their URL is suppoed to be
 #echo $DIVIDER; date; echo "Creating CrossRefDB ..."
 #./manage.py create_or_update_xrdb \
@@ -65,7 +65,9 @@ echo $DIVIDER; date; echo "Importing sample-signature activity for simple ML mod
 # Postgres database on Linux desktop in Greene Lab (~ TODO hours to an RDS instance)
 ./manage.py import_sample_signature_activity \
 	    --filename="${DATA_DIR}/mousiplier_sample_signature_activity.tsv" \
-	    --ml_model="${MODEL}"
+	    --ml_model="${MODEL}" \
+	    --score_file="${DATA_DIR}/silhouette_scores.pkl" \
+	    --study_file="${DATA_DIR}/sample_to_study.pkl"
 
 echo $DIVIDER; date; echo "Importing gene-gene network for simple ML model ..."
 ./manage.py import_gene_network \
