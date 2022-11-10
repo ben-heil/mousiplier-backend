@@ -180,6 +180,7 @@ class Activity(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.PROTECT)
     signature = models.ForeignKey(Signature, on_delete=models.PROTECT)
     value = models.FloatField()
+    score = models.FloatField()
 
     def __str__(self):
         return "Sample %s at Signature %s with value %f" % (

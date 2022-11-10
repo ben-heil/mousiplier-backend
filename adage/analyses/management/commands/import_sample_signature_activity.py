@@ -16,6 +16,7 @@ the management command "create_or_update_ml_model.py" to add it to database.
 """
 
 import logging
+import pickle as pkl
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from analyses.models import Sample, MLModel, Signature, Activity
@@ -31,10 +32,17 @@ class Command(BaseCommand):
         parser.add_argument(
             '--ml_model', dest='ml_model', type=str, required=True
         )
+        parser.add_argument(
+            '--score_file', dest='score_file', type=str, required=True
+        )
+        parser.add_argument(
+            '--study_file', dest='study_file', type=str, required=True
+        )
 
     def handle(self, **options):
         try:
-            import_activity(options['filename'], options['ml_model'])
+            import_activity(options['filename'], options['ml_model'],
+                            options['score_file'], options['study_file'])
             self.stdout.write(
                 self.style.SUCCESS("Sample-signature activity imported successfully")
             )
@@ -42,7 +50,7 @@ class Command(BaseCommand):
             raise CommandError("Failed to import activity data: %s" % e)
 
 
-def import_activity(file_handle, ml_model_title):
+def import_activity(file_handle, ml_model_title, score_file, study_file):
     """
     Read the data in activity sheet into the database.
     This function first checks whether ml_model_title exists in the
@@ -58,6 +66,12 @@ def import_activity(file_handle, ml_model_title):
             "Input ml_model (%s) not exist in database" % ml_model_title
         )
 
+    with open(study_file, 'rb') as in_file:
+        sample_to_study = pkl.load(in_file)
+
+    with open(score_file, 'rb') as in_file:
+        scores = pkl.load(in_file)
+
     # Enclose reading/importing process in a transaction context manager.
     # Any exception raised inside the manager will terminate the transaction
     # and roll back the database.
@@ -69,7 +83,7 @@ def import_activity(file_handle, ml_model_title):
                 signatures = tokens[1:]
                 import_signatures(signatures, mlmodel)
             else:
-                import_activity_line(line_num, signatures, tokens, mlmodel)
+                import_activity_line(line_num, signatures, tokens, mlmodel, scores, sample_to_study)
 
 
 def import_signatures(signatures, mlmodel):
@@ -103,7 +117,7 @@ def import_signatures(signatures, mlmodel):
             Signature.objects.create(name=name, mlmodel=mlmodel)
 
 
-def import_activity_line(line_num, signatures, tokens, mlmodel):
+def import_activity_line(line_num, signatures, tokens, mlmodel, scores, sample_to_study):
     """
     Import numerical values in input tokens into "Activity" table.
 
@@ -152,9 +166,14 @@ def import_activity_line(line_num, signatures, tokens, mlmodel):
                 "float type" % (line_num, col_num, value)
             )
 
+        study = sample_to_study[sample.name]
+        score = float('NaN')
+        if study in scores[signature_name]:
+            score = scores[signature_name][study]
+
         signature = Signature.objects.get(name=signature_name, mlmodel=mlmodel)
         records.append(
-            Activity(sample=sample, signature=signature, value=float_val)
+            Activity(sample=sample, signature=signature, value=float_val, score=score)
         )
         col_num += 1
 
